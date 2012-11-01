@@ -1,0 +1,193 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<title>CMDB系统</title>
+		<script type="text/javascript" src="zplugin/d3/js/d3.v2.js"></script>
+		<script type="text/javascript" src="/plugin/d3/js/d3.v2.min.js"></script>
+		<script type="text/javascript" src="/plugin/jquery/js/jquery.js"></script>
+		<script type="text/javascript" src="/plugin/jquery/js/jquery-ui.js"></script>
+		<script type="text/javascript" src="/js/common/mask/comMask.js"></script>
+		<script type="text/javascript" src="/js/network/visualization.js"></script>
+		<link href="/plugin/jquery/css/jquery-ui.css" rel="stylesheet">
+		<link href="/plugin/jquery/css/style.css" rel="stylesheet">
+		<style type="text/css">
+		body {
+			font-family: "Trebuchet MS", "Helvetica", "Arial",  "Verdana", "sans-serif";
+			font-size: 62.5%;
+		}
+		.ui-autocomplete-loading {
+	        	background: white url('/plugin/jquery/images/ui-anim_basic_16x16.gif') right center no-repeat;
+	    	}
+	    #hostName { width: 25em; }
+		#div-hostport {
+			font-size: 12px;
+			width: 360px;
+			height:580px;
+			margin-right:10px;
+			padding: 10px;
+			border: 1px solid #C1C1C1;
+			line-height: 1.5em;
+			background: white;
+			overflow: auto;
+		}
+		.ui-autocomplete {
+	        max-height: 100px;
+	        overflow-y: auto;
+	        /* prevent horizontal scrollbar */
+	        overflow-x: hidden;
+    	}
+    	* html .ui-autocomplete {
+	        height: 100px;
+	    }
+		</style>
+	</head>
+	<body >
+		<div id="main" style="margin-left:85px;">
+		<!-- 		<div id="main" style="width:1200px;margin:0 auto;"> -->
+				<div id="graph" style="width:807px;height:600px;border: 1px solid #C1C1C1;float:left;display:block;">
+					<section id="search" style="padding-bottom: 5px;padding-top: 5px;background-color:#A14E10;padding-left: 5px;">
+						<label>请输入主机名:</label> 
+						<input id="hostName" name="neoid" type="text" style="width:200px;"/> 
+						<input class="button" id="loadnode"type="submit" value="查询" />
+					</section>
+					<div id="chartShow"></div>
+				</div>
+				<div id="div-hostport">
+					<table id="table-hostport" style="border: 1px solid black;width: 100%;text-align: center;">
+						<thead>
+							<tr>
+								<th>主机名</th>
+								<th>端口</th>
+								<th>主机名</th>
+								<th>端口</th>
+							</tr>
+						</thead>
+						<tbody>
+						</tbody>
+					</table>
+				</div>
+		</div>
+		<div id="tabs" style="display:none;width:960px;margin-top:-250px;margin-left:-250px;position:absolute;top:50%;left:40%;font-size:12px;z-index:10001">
+			<ul>
+				<li><a href="#hostinfoDiv">主机信息</a></li>
+		        <li><a href="#hostChartDiv">运行状态</a></li>
+		        <li  style="float:right;"><input type="button" value="返回" id="return"/></li>
+		    </ul>
+		    <div id="hostinfoDiv" style="">
+		    	<iframe style="width:100%;border:0px;height:400px;" src="/host/info.htm"></iframe>
+		    </div>
+		    <div id="hostChartDiv">
+		    	<iframe style="width:100%;border:0px;height:400px;" src="http://graphite.zj.chinamobile.com:8080/render/?title=Combined+CPU+Usage&vtitle=percent&from=-1hour&width=600&height=300&until=now&areaMode=none&yMin=0&yMax=100&target=alias%28color%28scale%28Zmcc.cc670b.system.cpu.wait%2C1%29%2C%22red%22%29%2C%22Cpu+Wait%22%29&target=alias%28color%28scale%28Zmcc.cc670b.system.cpu.sys%2C1%29%2C%22orange%22%29%2C%22Cpu+System%22%29&target=alias%28color%28scale%28Zmcc.cc670b.system.cpu.user%2C1%29%2C%22yellow%22%29%2C%22Cpu+User%22%29&1351676549121"></iframe>
+		    </div>
+		</div>
+	</body>
+</html>
+<script type="text/javascript" charset="utf-8">
+	var w = 807, h = 557;
+	var id="chartShow";
+	function  queryData(host,queryDate){
+	  	$("#"+id).html("");
+	  	$.ajax({
+		  	  async: true,
+		      type: "GET",
+		      url: "/rela/queryD3Relation.dox",
+		      data: {hostName: host,createDate:queryDate},
+		      dataType: 'json',
+		      success: function(response) {
+		    	  	callBack(response.data);		    	  	
+			  },
+		      error:function(response){
+		    	  alert("出现异常");
+		      }
+	  	});	  
+	}
+	function callBack(dataJson){
+		visualize(id,w,h,dataJson);
+		$(".linkNode").each(function(){ 
+			$(this).bind("click",function(){
+				var fromhost=$(this).attr("fromhost");
+				var tohost=$(this).attr("tohost");
+			  	  $.ajax({
+			  		  async: true,
+				      type: "GET",
+				      url: "/rela/queryNodeDetail.dox",
+				      data: {fromHost: fromhost,toHost:tohost,createDate:"20121029091802"},
+				      dataType: 'json',
+				      success: function(response) {
+				      	var data=response.data;
+				      	var html="";
+				      	for(var i=0;i<data.length;i++){
+				      		var object=data[i];
+				      		html=html+"<tr><td>"+object.fromHost+"</td><td>"+object.fromPort+"</td><td>"+object.toHost+"</td><td>"+object.toPort+"</td></tr>";
+				      	}
+				      	$("#table-hostport tbody").html(html);
+				      },
+				      error: function(response){
+				      
+				      }
+			      });
+			});				
+		});
+		$(".node").each(function(){ 
+			$(this).bind("click",function(){
+				var hostName=$(this).attr("hostname");
+				$("#tabs ul li a").each(function(){
+					var href=$(this).attr("href");
+					if(href!="#hostChartDiv"){
+						//href=href.split("?")[0];
+						var iframeSrc=$(href+" iframe").attr("src");
+						iframeSrc=iframeSrc.split("?")[0];
+						$(href+" iframe").attr("src",iframeSrc+"?hostName="+hostName);
+					}
+				});
+		        $( "#tabs" ).tabs({
+		            beforeLoad: function( event, ui ) {
+		                ui.jqXHR.error(function() {
+		                	ui.panel.html("<div style='margin:0 auto;text-align:center;'><img src='/images/ui-anim_basic_16x16.gif' /></div>" );
+		                });
+		                ui.jqXHR.success(function() {
+		                	
+		                });
+		            },
+		            load :function( event, ui ){
+		       
+		            }
+		        });
+				Shade.show("tabs");
+			});				
+		});
+	}
+	$(document).ready(function(){
+		$("#loadnode").bind("click",function(){
+			queryData($("#hostName").val(),"20121029091802");
+		});
+		$("#return").bind("click",function(){
+			$( "#tabs" ).tabs( "destroy" );
+			Shade.hide("tabs");
+		});
+	    $( "#tabs ul li a" ).bind("click",function(){
+			//alert($(this).attr("href"));
+		});
+		queryData("pc-zjdwcrm12","20121029091802");
+        $( "#hostName" ).autocomplete({
+            source: function( request, response ) {
+                $.ajax({
+                    url: "/rela/autoSearchHost.dox",
+                    dataType: "json",
+                    data: {inputWord: request.term},
+                    success: function( data ) {
+                        response(data.data);
+                    }
+                });
+            },
+            minLength: 2,
+            open: function() {
+                $( this ).removeClass( "ui-corner-all" ).addClass( "ui-corner-top" );
+            },
+            close: function() {
+                $( this ).removeClass( "ui-corner-top" ).addClass( "ui-corner-all" );
+            }
+        });
+	});
+</script>

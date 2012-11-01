@@ -1,0 +1,16 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+		<title>操作请求出现错误</title>
+	</head>
+	<body>
+		<div class="error">
+			<div class="error_box">
+				<h2>We're sorry...</h2>
+				<p>操作出现错误!</p>		
+				<p >$errorinfo</p>
+			</div>
+		</div>
+	</body>
+</html>

@@ -1,0 +1,116 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<style type="text/css">
+.div-canvas {
+	position: relative;
+	width: 800px;
+	height: 600px;
+	width: 800px;
+	border-radius: 5px;  
+	-moz-border-radius: 5px;
+	-webkit-border-radius: 5px;
+	border: 1px solid #c1c1c1;
+}
+</style>
+<link href="../public/css/global.css" rel="stylesheet">
+<script src="../plugin/jquery/js/jquery.js"></script>
+<script src="../plugin/jquery/js/jquery-ui.js"></script>
+<script src="../public/js/ui.js"></script>
+<script src="../public/js/processing.js"></script>
+</head>
+<body>
+	<div>
+		<section id="search">
+			<form action="/nodegraph/views/neovigator.html"
+				method="get">
+				<label>请输入主机名:</label> 
+				<input id="neoid" name="neoid" type="text"/> 
+				<input class="button" id="loadnode"type="submit" value="查询" />
+			</form>
+		</section>
+	</div>
+	<canvas id="neoviz" ></canvas>
+	<aside>
+		<div id="div-hostport">
+				<table id="table-hostport" style="border: 1px solid black;width: 100%;text-align: center;">
+					<thead>
+						<tr>
+							<th>主机名</th>
+							<th>端口</th>
+							<th>主机名</th>
+							<th>端口</th>
+						</tr>
+					</thead>
+					<tbody>
+					</tbody>
+				</table>
+			</div>
+	</aside>
+</body>
+</html>
+<script>
+	var canvas = document.getElementById("neoviz");
+	var myGraph; 
+	var p = Processing(canvas);
+	var isFirstLoadNode = true;
+	function loadvisualization() {
+		var vizid = document.getElementById("vizid").value
+		if (vizid != "") {
+			p.resourceId = vizid;
+		} else {
+			alert(window.location.search);
+			p.resourceId = window.location.search.substring(1).split("=")[1];
+		}
+		p.resourceId = vizid;
+		p.setup();
+
+		$("#path li").remove();
+
+	};
+
+	$(function() {
+		function canvasSupported() {
+			var canvas_compatible = false;
+			try {
+				canvas_compatible = !!(document.createElement("canvas")
+						.getContext("2d")); // S60
+			} catch (e) {
+				canvas_compatible = !!(document.createElement("canvas").getContext); // IE
+			}
+			return canvas_compatible;
+		}
+
+		if (canvasSupported()) {
+
+			var initialized = false;
+
+			// init
+			var vizid = window.location.search.substring(1).split("=")[1];
+			if (vizid) {
+				p.resourceId = vizid;
+			} else {
+				p.resourceId = "0";
+			}
+
+			p.init(p.ajax("../public/js/pjs/physics.pjs")
+					+ p.ajax("../public/js/pjs/donut.pjs")
+					+ p.ajax("../public/js/pjs/resource.pjs")
+					+ p.ajax("../public/js/pjs/node.pjs")
+					+ p.ajax("../public/js/pjs/edge.pjs")
+					+ p.ajax("../public/js/pjs/graph.pjs")
+					+ p.ajax("../public/js/pjs/network.pjs"));
+			initialized = true;
+
+			$(window).resize(function() {
+				p.resize();
+				Attributes.adjustHeight();
+			});
+		} else {
+			$("#browser_not_supported").show();
+			$("#explanation").hide();
+		}
+	});
+	//
+</script>
